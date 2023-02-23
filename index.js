@@ -74,9 +74,8 @@ app.post('/login', async (req, res) => {
                     throw err;
                 }
                 console.log(token);
-              
                 res.cookie('token',token,{
-                    expires: 86400,
+                    expires: new Date(Date.now() + 5000),
                     httpOnly: false,
                     secure: true,
                     sameSite:'none'
@@ -242,7 +241,7 @@ app.put('/updateprofile', uploadMiddleware.single('file'), async (req, res) => {
         const updatedToken = jwt.sign(updatedUserData, secret, {});
 
         res.cookie('token', updatedToken,{
-            expires: 86400,
+            expires: new Date(Date.now() + 5000),
             httpOnly: false,
             secure: true,
             sameSite:'none'
