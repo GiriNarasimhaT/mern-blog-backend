@@ -74,6 +74,7 @@ app.post('/login', async (req, res) => {
                     expires: new Date(Date.now() + 500000),
                     httpOnly: false,
                     secure: false,
+                    sameSite:'none'
                 }).json({
                     id:userDoc._id,
                     username:userDoc.username,
@@ -106,7 +107,12 @@ app.get('/profile', (req,res)=>{
 });
 
 app.post('/logout',(req,res)=>{
-    res.cookie('token','').json('ok');
+    res.cookie('token','',{
+        expires: new Date(Date.now() + 500000),
+        httpOnly: false,
+        secure: false,
+        sameSite:'none'
+    }).json('ok');
 });
 
 // Post Creation
@@ -233,6 +239,7 @@ app.put('/updateprofile', uploadMiddleware.single('file'), async (req, res) => {
             expires: new Date(Date.now() + 500000),
             httpOnly: false,
             secure: false,
+            sameSite:'none'
         }).json('ok');
     });
 });
@@ -279,7 +286,12 @@ app.delete('/deleteuser', uploadMiddleware.single('file'), async (req, res) => {
             return res.status(400).json('You have not Singed In');
         }
         await userDoc.deleteOne().then(
-            res.cookie('token','').json('ok')
+            res.cookie('token','',{
+                expires: new Date(Date.now() + 500000),
+                httpOnly: false,
+                secure: false,
+                sameSite:'none'
+            }).json('ok')
         );
         //delete profile picture
         if (userDoc.profilePicture){
