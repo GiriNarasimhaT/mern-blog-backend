@@ -25,10 +25,18 @@ mongoose.connect(DB).then(() => {
   console.error('Error connecting to MongoDB', error);
 });
 
-app.use(cors({
-    credentials: true,
-    origin: 'https://singular-daffodil-8eb0b6.netlify.app/'
-  }));
+const whitelist = ["https://singular-daffodil-8eb0b6.netlify.app"]
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || whitelist.indexOf(origin) !== -1) {
+      callback(null, true)
+    } else {
+      callback(new Error("Not allowed by CORS"))
+    }
+  },
+  credentials: true,
+}
+app.use(cors(corsOptions))
 
 app.use(express.json());
 app.use(cookieParser());
