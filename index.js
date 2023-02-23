@@ -27,7 +27,7 @@ mongoose.connect(DB).then(() => {
 
 app.use(cors({
     credentials: true,
-    origin: 'http://localhost:3000'
+    origin: 'https://singular-daffodil-8eb0b6.netlify.app/'
   }));
 
 app.use(express.json());
