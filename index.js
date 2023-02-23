@@ -107,6 +107,7 @@ app.get('/profile', (req,res)=>{
 });
 
 app.post('/logout', (req, res) => {
+  console.log('Logout endpoint called');
     res.cookie('token', '', {
       expires: new Date(Date.now() - 1),
       httpOnly: false,
