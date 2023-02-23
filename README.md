@@ -2,4 +2,6 @@
 
 Live at : https://singular-daffodil-8eb0b6.netlify.app/
 
-Note : Few issues with cookies, will be resolving soon..
+Note : Cookie Issue resolved 
+        React quill editor issues exist, will be fixed soon..
+        Problems : new post, update post , update profile will not be working which uses quill editor.
