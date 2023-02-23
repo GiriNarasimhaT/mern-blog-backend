@@ -10,10 +10,20 @@ const cookieParser = require('cookie-parser');
 const multer = require('multer');
 const uploadMiddleware = multer({ dest: 'uploads/'})
 const fs = require('fs');
+require('dotenv').config();
 
-if (process.env.NODE_ENV !== "production") {
-  require("dotenv").config()
-}
+const salt = bcrypt.genSaltSync(10);
+const secret = 'dh27rgfyu46f7twyufg46tf8y34rfg783';
+
+const PORT = process.env.PORT || 4000;
+
+const DB = process.env.DATABASE;
+
+mongoose.connect(DB).then(() => {
+  console.log('Connected to MongoDB');
+}).catch((error) => {
+  console.error('Error connecting to MongoDB', error);
+});
 
 const domainsFromEnv = process.env.CORS_DOMAINS || ""
 
@@ -29,24 +39,7 @@ const corsOptions = {
   },
   credentials: true,
 }
-app.use(cors(corsOptions));
-
-app.get("/", (req, res) => {
-  res.send({ message: "Hello World!" })
-});
-
-const salt = bcrypt.genSaltSync(10);
-const secret = 'dh27rgfyu46f7twyufg46tf8y34rfg783';
-
-const PORT = process.env.PORT || 4000;
-
-const DB = process.env.DATABASE;
-
-mongoose.connect(DB).then(() => {
-  console.log('Connected to MongoDB');
-}).catch((error) => {
-  console.error('Error connecting to MongoDB', error);
-});
+app.use(cors(corsOptions))
 
 app.use(express.json());
 app.use(cookieParser());
@@ -77,7 +70,11 @@ app.post('/login', async (req, res) => {
         if (passOk){
             jwt.sign({email,id:userDoc._id,username:userDoc.username,profilePicture:userDoc.profilePicture},secret,{},(err,token)=>{
                 if (err) throw err;
-                res.cookie('token',token).json({
+                res.cookie('token',token,{
+                    expires: new Date(Date.now() + 500000),
+                    httpOnly: false,
+                    secure: false,
+                }).json({
                     id:userDoc._id,
                     username:userDoc.username,
                     profilePicture:userDoc.profilePicture,
@@ -232,7 +229,11 @@ app.put('/updateprofile', uploadMiddleware.single('file'), async (req, res) => {
 
         const updatedToken = jwt.sign(updatedUserData, secret, {});
 
-        res.cookie('token', updatedToken).json('ok');
+        res.cookie('token', updatedToken,{
+            expires: new Date(Date.now() + 500000),
+            httpOnly: false,
+            secure: false,
+        }).json('ok');
     });
 });
 
