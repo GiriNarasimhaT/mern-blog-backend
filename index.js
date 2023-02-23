@@ -69,7 +69,11 @@ app.post('/login', async (req, res) => {
         const passOk = bcrypt.compareSync(password,userDoc.password);
         if (passOk){
             jwt.sign({email,id:userDoc._id,username:userDoc.username,profilePicture:userDoc.profilePicture},secret,{},(err,token)=>{
-                if (err) throw err;
+                if (err){
+                    console.log(err);
+                    throw err;
+                }
+                console.log(token);
                 res.cookie('token',token,{
                     expires: 86400,
                     httpOnly: false,
