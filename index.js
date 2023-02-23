@@ -73,7 +73,7 @@ app.post('/login', async (req, res) => {
                 res.cookie('token',token,{
                     expires: new Date(Date.now() + 500000),
                     httpOnly: false,
-                    secure: false,
+                    secure: true,
                     sameSite:'none'
                 }).json({
                     id:userDoc._id,
@@ -110,7 +110,7 @@ app.post('/logout',(req,res)=>{
     res.cookie('token','',{
         expires: new Date(Date.now() + 500000),
         httpOnly: false,
-        secure: false,
+        secure: true,
         sameSite:'none'
     }).json('ok');
 });
@@ -238,7 +238,7 @@ app.put('/updateprofile', uploadMiddleware.single('file'), async (req, res) => {
         res.cookie('token', updatedToken,{
             expires: new Date(Date.now() + 500000),
             httpOnly: false,
-            secure: false,
+            secure: true,
             sameSite:'none'
         }).json('ok');
     });
@@ -289,7 +289,7 @@ app.delete('/deleteuser', uploadMiddleware.single('file'), async (req, res) => {
             res.cookie('token','',{
                 expires: new Date(Date.now() + 500000),
                 httpOnly: false,
-                secure: false,
+                secure: true,
                 sameSite:'none'
             }).json('ok')
         );
