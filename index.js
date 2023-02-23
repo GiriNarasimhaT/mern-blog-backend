@@ -75,7 +75,7 @@ app.post('/login', async (req, res) => {
                 }
                 console.log(token);
                 res.cookie('token',token,{
-                    expires: new Date(Date.now() + 5000),
+                    expires: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
                     httpOnly: false,
                     secure: true,
                     sameSite:'none'
