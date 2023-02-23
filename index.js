@@ -116,33 +116,38 @@ app.post('/logout', (req, res) => {
   });  
 
 // Post Creation
-app.post('/post', uploadMiddleware.single('file'), async (req,res)=>{
-    const {originalname,path}=req.file;
-    const parts = originalname.split('.');
-    const ext = parts[parts.length - 1];
-    const newPath = path+'.'+ext
-    fs.renameSync(path, newPath);
-
-    const {token} = req.cookies;
-    jwt.verify(token,secret,{},async (err,info)=>{
+app.post('/post', uploadMiddleware.single('file'), async (req, res) => {
+    try {
+        const { token } = req.cookies;
+        jwt.verify(token, secret, {}, async (err, info) => {
         if (err) throw err;
-        const {title,summary,content}=req.body;
+        const { title, summary, content } = req.body;
+        let newPath = '';
+        if (req.file) {
+            const { originalname, path } = req.file;
+            const parts = originalname.split('.');
+            const ext = parts[parts.length - 1];
+            newPath = path + '.' + ext;
+            fs.renameSync(path, newPath);
+        }
         const postDoc = await Post.create({
             title,
             summary,
             content,
-            cover:newPath,
-            author:info.id, 
+            cover: newPath,
+            author: info.id,
         });
-
         // incrementing postcount
         await User.findOneAndUpdate(
             { _id: info.id },
             { $inc: { postcount: 1 } },
             { new: true }
-          );
+        );
         res.json(postDoc);
-    });
+        });
+    } catch (error) {
+        console.log(error);
+    }
 });
 
 // Post Updation
