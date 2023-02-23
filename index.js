@@ -10,7 +10,30 @@ const cookieParser = require('cookie-parser');
 const multer = require('multer');
 const uploadMiddleware = multer({ dest: 'uploads/'})
 const fs = require('fs');
-require('dotenv').config();
+
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config()
+}
+
+const domainsFromEnv = process.env.CORS_DOMAINS || ""
+
+const whitelist = domainsFromEnv.split(",").map(item => item.trim())
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || whitelist.indexOf(origin) !== -1) {
+      callback(null, true)
+    } else {
+      callback(new Error("Not allowed by CORS"))
+    }
+  },
+  credentials: true,
+}
+app.use(cors(corsOptions));
+
+app.get("/", (req, res) => {
+  res.send({ message: "Hello World!" })
+});
 
 const salt = bcrypt.genSaltSync(10);
 const secret = 'dh27rgfyu46f7twyufg46tf8y34rfg783';
@@ -24,19 +47,6 @@ mongoose.connect(DB).then(() => {
 }).catch((error) => {
   console.error('Error connecting to MongoDB', error);
 });
-
-const whitelist = ["https://singular-daffodil-8eb0b6.netlify.app"]
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin || whitelist.indexOf(origin) !== -1) {
-      callback(null, true)
-    } else {
-      callback(new Error("Not allowed by CORS"))
-    }
-  },
-  credentials: true,
-}
-app.use(cors(corsOptions))
 
 app.use(express.json());
 app.use(cookieParser());
