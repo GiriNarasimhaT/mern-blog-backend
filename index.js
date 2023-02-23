@@ -106,14 +106,14 @@ app.get('/profile', (req,res)=>{
     }
 });
 
-app.post('/logout',(req,res)=>{
-    res.cookie('token','',{
-        expires: new Date(Date.now() + 500000),
-        httpOnly: false,
-        secure: true,
-        sameSite:'none'
+app.post('/logout', (req, res) => {
+    res.cookie('token', '', {
+      expires: new Date(Date.now() - 1),
+      httpOnly: false,
+      secure: true,
+      sameSite: 'none'
     }).json('ok');
-});
+  });  
 
 // Post Creation
 app.post('/post', uploadMiddleware.single('file'), async (req,res)=>{
@@ -287,7 +287,7 @@ app.delete('/deleteuser', uploadMiddleware.single('file'), async (req, res) => {
         }
         await userDoc.deleteOne().then(
             res.cookie('token','',{
-                expires: new Date(Date.now() + 500000),
+                expires: new Date(Date.now() - 1),
                 httpOnly: false,
                 secure: true,
                 sameSite:'none'
