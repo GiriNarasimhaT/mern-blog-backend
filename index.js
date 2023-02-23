@@ -63,321 +63,276 @@ app.post('/register', async (req,res)=>{
 });
 
 app.post('/login', async (req, res) => {
-    try {
-        const {email,password}=req.body;
-        const userDoc = await User.findOne({email});
-        if(userDoc){
-            const passOk = bcrypt.compareSync(password,userDoc.password);
-            if (passOk){
-                jwt.sign({email,id:userDoc._id,username:userDoc.username,profilePicture:userDoc.profilePicture},secret,{},(err,token)=>{
-                    if (err) throw err;
-                    res.cookie('token',token,{
-                        expires: 86400,
-                        httpOnly: false,
-                        secure: true,
-                        sameSite:'none'
-                    }).json({
-                        id:userDoc._id,
-                        username:userDoc.username,
-                        profilePicture:userDoc.profilePicture,
-                        email,
-                    });
+    const {email,password}=req.body;
+    const userDoc = await User.findOne({email});
+    if(userDoc){
+        const passOk = bcrypt.compareSync(password,userDoc.password);
+        if (passOk){
+            jwt.sign({email,id:userDoc._id,username:userDoc.username,profilePicture:userDoc.profilePicture},secret,{},(err,token)=>{
+                if (err) throw err;
+                res.cookie('token',token,{
+                    expires: 86400,
+                    httpOnly: false,
+                    secure: true,
+                    sameSite:'none'
+                }).json({
+                    id:userDoc._id,
+                    username:userDoc.username,
+                    profilePicture:userDoc.profilePicture,
+                    email,
                 });
-            } else{
-                res.status(400).json('Wrong Password')
-            }
+            });
+        } else{
+            res.status(400).json('Wrong Password')
         }
-        else{
-            res.status(400).json('No Account found with that email')
-        }
-    } catch (error) {
-        res.status(500).json('Internal server error');
-        console.log(error);
+    }
+    else{
+        res.status(400).json('No Account found with that email')
     }
 });
 
 app.get('/profile', (req,res)=>{
-    try {
-        if (req.cookies.token){
-            const {token} = req.cookies;
-            if(token){
-                jwt.verify(token,secret,{},(err,info)=>{
-                    if (err) throw err;
-                    res.json(info);
-                });
-            }
-            else{
-                res.json('')
-            }
+    if (req.cookies.token){
+        const {token} = req.cookies;
+        if(token){
+            jwt.verify(token,secret,{},(err,info)=>{
+                if (err) throw err;
+                res.json(info);
+            });
         }
-    } catch (error) {
-        res.status(500).json('Internal server error');
-        console.log(error);
+        else{
+            res.json('')
+        }
     }
 });
 
 app.post('/logout', (req, res) => {
-    try {
-        res.cookie('token', '', {
-            expires: new Date(Date.now() - 1),
-            httpOnly: false,
-            secure: true,
-            sameSite: 'none'
-          }).json('ok');
-    } catch (error) {
-        res.status(500).json('Internal server error');
-        console.log(error);
-    }
+    res.cookie('token', '', {
+      expires: new Date(Date.now() - 1),
+      httpOnly: false,
+      secure: true,
+      sameSite: 'none'
+    }).json('ok');
   });  
 
 // Post Creation
 app.post('/post', uploadMiddleware.single('file'), async (req, res) => {
-    try {
-        const { token } = req.cookies;
-        jwt.verify(token, secret, {}, async (err, info) => {
-        if (err) throw err;
-        const { title, summary, content } = req.body;
-        let newPath = '';
-        if (req.file) {
-            const { originalname, path } = req.file;
-            const parts = originalname.split('.');
-            const ext = parts[parts.length - 1];
-            newPath = path + '.' + ext;
-            fs.renameSync(path, newPath);
-        }
-        const postDoc = await Post.create({
-            title,
-            summary,
-            content,
-            cover: newPath,
-            author: info.id,
-        });
-        // incrementing postcount
-        await User.findOneAndUpdate(
-            { _id: info.id },
-            { $inc: { postcount: 1 } },
-            { new: true }
-        );
-        res.json(postDoc);
-        });
-    } catch (error) {
-        res.status(500).json('Internal server error');
-        console.log(error);
-    }
-});
+    const { token } = req.cookies;
+    jwt.verify(token, secret, {}, async (err, info) => {
+      if (err) throw err;
+      const { title, summary, content } = req.body;
+      let newPath = '';
+      if (req.file) {
+        const { originalname, path } = req.file;
+        const parts = originalname.split('.');
+        const ext = parts[parts.length - 1];
+        newPath = path + '.' + ext;
+        fs.renameSync(path, newPath);
+      }
+      const postDoc = await Post.create({
+        title,
+        summary,
+        content,
+        cover: newPath,
+        author: info.id,
+      });
+      // incrementing postcount
+      await User.findOneAndUpdate(
+        { _id: info.id },
+        { $inc: { postcount: 1 } },
+        { new: true }
+      );
+      res.json(postDoc);
+    });
+  });
 
 // Post Updation
 app.put('/post', uploadMiddleware.single('file'), async (req, res) => {
-    try {
-        let newPath = null;
-        if(req.file){
-            const {originalname,path}=req.file;
-            const parts = originalname.split('.');
-            const ext = parts[parts.length - 1];
-            newPath = path+'.'+ext;
-            fs.renameSync(path, newPath);
-        }
-        
-        const {token} = req.cookies;
-        jwt.verify(token,secret,{},async (err,info)=>{
-            if (err) throw err;
-            const {id,title,summary,content}=req.body;
-            const postDoc = await Post.findById(id);
-            if (!postDoc) {
-                return res.status(404).json("Page not found");
-            }
-            const user = JSON.stringify(postDoc.author)===JSON.stringify(info.id);
-            if (!user){
-                return res.status(400).json('Post updation failed');
-            }
-
-            // delete old postcover
-            if (newPath && postDoc.cover){
-                fs.unlink(postDoc.cover, (err) => {
-                    if (err) throw err;
-                });
-            }
-
-            await postDoc.updateOne({
-                title,
-                summary,
-                content,
-                cover: newPath ? newPath : postDoc.cover,
-            });
-            res.json(postDoc);
-        });
-    } catch (error) {
-        res.status(500).json('Internal server error');
-        console.log(error);
+    let newPath = null;
+    if(req.file){
+        const {originalname,path}=req.file;
+        const parts = originalname.split('.');
+        const ext = parts[parts.length - 1];
+        newPath = path+'.'+ext;
+        fs.renameSync(path, newPath);
     }
+    
+    const {token} = req.cookies;
+    jwt.verify(token,secret,{},async (err,info)=>{
+        if (err) throw err;
+        const {id,title,summary,content}=req.body;
+        const postDoc = await Post.findById(id);
+        if (!postDoc) {
+            return res.status(404).json("Page not found");
+        }
+        const user = JSON.stringify(postDoc.author)===JSON.stringify(info.id);
+        if (!user){
+            return res.status(400).json('Post updation failed');
+        }
+
+        // delete old postcover
+        if (newPath && postDoc.cover){
+            fs.unlink(postDoc.cover, (err) => {
+                if (err) throw err;
+            });
+        }
+
+        await postDoc.updateOne({
+            title,
+            summary,
+            content,
+            cover: newPath ? newPath : postDoc.cover,
+        });
+        res.json(postDoc);
+    });
 });
 
 app.put('/updateprofile', uploadMiddleware.single('file'), async (req, res) => {
-    try {
-        let newPath = null;
-        if(req.file){
-            const {originalname,path}=req.file;
-            const parts = originalname.split('.');
-            const ext = parts[parts.length - 1];
-            newPath = path+'.'+ext;
-            fs.renameSync(path, newPath);
-        }
-        
-        const {token} = req.cookies;
-        jwt.verify(token,secret,{},async (err,info)=>{
-            if (err) throw err;
-            const {id,email,username,postcount,bio}=req.body;
-            const userDoc = await User.findById(id);
-            if (!userDoc) {
-                return res.status(404).json("Page not found");
-            }
-            const user = JSON.stringify(userDoc._id)===JSON.stringify(info.id);
-            if (!user){
-                return res.status(400).json('You are not Logged in');
-            }
-
-            //delete old profile picture
-            if (newPath && userDoc.profilePicture){
-                fs.unlink(userDoc.profilePicture, (err) => {
-                    if (err) throw err;
-                });
-            }
-
-            await userDoc.updateOne({
-                email,
-                username,
-                profilePicture: newPath ? newPath : userDoc.profilePicture,
-                postcount,
-                bio,
-            });
-            
-            const userdata = await User.findById(userDoc._id).exec();
-
-            const updatedUserData = {
-            email,
-            id: userdata._id,
-            username: userdata.username,
-            profilePicture: userdata.profilePicture,
-            };
-
-            const updatedToken = jwt.sign(updatedUserData, secret, {});
-
-            res.cookie('token', updatedToken,{
-                expires: 86400,
-                httpOnly: false,
-                secure: true,
-                sameSite:'none'
-            }).json('ok');
-        });
-    } catch (error) {
-        res.status(500).json('Internal server error');
-        console.log(error);
+    let newPath = null;
+    if(req.file){
+        const {originalname,path}=req.file;
+        const parts = originalname.split('.');
+        const ext = parts[parts.length - 1];
+        newPath = path+'.'+ext;
+        fs.renameSync(path, newPath);
     }
+    
+    const {token} = req.cookies;
+    jwt.verify(token,secret,{},async (err,info)=>{
+        if (err) throw err;
+        const {id,email,username,postcount,bio}=req.body;
+        const userDoc = await User.findById(id);
+        if (!userDoc) {
+            return res.status(404).json("Page not found");
+        }
+        const user = JSON.stringify(userDoc._id)===JSON.stringify(info.id);
+        if (!user){
+            return res.status(400).json('You are not Logged in');
+        }
+
+        //delete old profile picture
+        if (newPath && userDoc.profilePicture){
+            fs.unlink(userDoc.profilePicture, (err) => {
+                if (err) throw err;
+            });
+        }
+
+        await userDoc.updateOne({
+            email,
+            username,
+            profilePicture: newPath ? newPath : userDoc.profilePicture,
+            postcount,
+            bio,
+        });
+        
+        const userdata = await User.findById(userDoc._id).exec();
+
+        const updatedUserData = {
+        email,
+        id: userdata._id,
+        username: userdata.username,
+        profilePicture: userdata.profilePicture,
+        };
+
+        const updatedToken = jwt.sign(updatedUserData, secret, {});
+
+        res.cookie('token', updatedToken,{
+            expires: 86400,
+            httpOnly: false,
+            secure: true,
+            sameSite:'none'
+        }).json('ok');
+    });
 });
 
 app.delete('/delete', uploadMiddleware.single('file'), async (req, res) => {
-    try {
-        const {token} = req.cookies;
-        jwt.verify(token,secret,{},async (err,info)=>{
-            if (err) throw err;
-            const {id}=req.body;
-            const postDoc = await Post.findById(id);
-            const isAuthor = JSON.stringify(postDoc.author)===JSON.stringify(info.id);
-            if (!isAuthor){
-                return res.status(400).json('You are not the author');
-            }
-    
-            //delete postcover
-            if (postDoc.cover){
-                fs.unlink(postDoc.cover, (err) => {
-                    if (err) throw err;
-                  });
-            }
-    
-            await postDoc.deleteOne();
-    
-            // decrementing postcount
-            await User.findOneAndUpdate(
-                { _id: info.id },
-                { $inc: { postcount: -1 } },
-                { new: true }
-            );
-    
-            res.json(postDoc);
-        });
-    } catch (error) {
-        res.status(500).json('Internal server error');
-        console.log(error);
-    }
+    const {token} = req.cookies;
+    jwt.verify(token,secret,{},async (err,info)=>{
+        if (err) throw err;
+        const {id}=req.body;
+        const postDoc = await Post.findById(id);
+        const isAuthor = JSON.stringify(postDoc.author)===JSON.stringify(info.id);
+        if (!isAuthor){
+            return res.status(400).json('You are not the author');
+        }
+
+        //delete postcover
+        if (postDoc.cover){
+            fs.unlink(postDoc.cover, (err) => {
+                if (err) throw err;
+              });
+        }
+
+        await postDoc.deleteOne();
+
+        // decrementing postcount
+        await User.findOneAndUpdate(
+            { _id: info.id },
+            { $inc: { postcount: -1 } },
+            { new: true }
+        );
+
+        res.json(postDoc);
+    });
 });
 
 app.delete('/deleteuser', uploadMiddleware.single('file'), async (req, res) => {
-    try {
-        const {token} = req.cookies;
-        jwt.verify(token,secret,{},async (err,info)=>{
-            if (err) throw err;
-            const {id}=req.body;
-            const userDoc = await User.findById(id);
-            const user = JSON.stringify(userDoc._id)===JSON.stringify(info.id);
-            if (!user){
-                return res.status(400).json('You have not Singed In');
-            }
-            await userDoc.deleteOne().then(
-                res.cookie('token','',{
-                    expires: new Date(Date.now() - 1),
-                    httpOnly: false,
-                    secure: true,
-                    sameSite:'none'
-                }).json('ok')
-            );
-            //delete profile picture
-            if (userDoc.profilePicture){
-                fs.unlink(userDoc.profilePicture, (err) => {
-                    if (err) throw err;
-                });
-            }
-        });
-    } catch (error) {
-        res.status(500).json('Internal server error');
-        console.log(error);
-    }
+    const {token} = req.cookies;
+    jwt.verify(token,secret,{},async (err,info)=>{
+        if (err) throw err;
+        const {id}=req.body;
+        const userDoc = await User.findById(id);
+        const user = JSON.stringify(userDoc._id)===JSON.stringify(info.id);
+        if (!user){
+            return res.status(400).json('You have not Singed In');
+        }
+        await userDoc.deleteOne().then(
+            res.cookie('token','',{
+                expires: new Date(Date.now() - 1),
+                httpOnly: false,
+                secure: true,
+                sameSite:'none'
+            }).json('ok')
+        );
+        //delete profile picture
+        if (userDoc.profilePicture){
+            fs.unlink(userDoc.profilePicture, (err) => {
+                if (err) throw err;
+            });
+        }
+    });
 });
 
 app.delete('/deleteposts', uploadMiddleware.single('file'), async (req, res) => {
-    try {
-        const {token} = req.cookies;
-        jwt.verify(token,secret,{},async (err,info)=>{
-            if (err) throw err;
-            const {id}=req.body;
-            const user = JSON.stringify(id)===JSON.stringify(info.id);
-            const userDoc=User.findById(info.id);
-            if (!user){
-                return res.status(400).json('You have not Singed In');
-            }
+    const {token} = req.cookies;
+    jwt.verify(token,secret,{},async (err,info)=>{
+        if (err) throw err;
+        const {id}=req.body;
+        const user = JSON.stringify(id)===JSON.stringify(info.id);
+        const userDoc=User.findById(info.id);
+        if (!user){
+            return res.status(400).json('You have not Singed In');
+        }
 
-            //Delete all postcovers
-            const posts = await Post.find({ author: id });
-            for (const post of posts) {
-                if (post.cover){
-                    fs.unlink(post.cover, (err) => {
-                        if (err) throw err;
-                    });
-                }
+        //Delete all postcovers
+        const posts = await Post.find({ author: id });
+        for (const post of posts) {
+            if (post.cover){
+                fs.unlink(post.cover, (err) => {
+                    if (err) throw err;
+                });
             }
+        }
 
-            await Post.deleteMany({author:id});
-            // set postcount to 0
-            await User.findOneAndUpdate(
-                { _id: info.id },
-                { postcount: 0 },
-                { new: true }
-            );
-            res.json('ok');
-        });
-    } catch (error) {
-        res.status(500).json('Internal server error');
-        console.log(error);
-    }
+        await Post.deleteMany({author:id});
+        // set postcount to 0
+        await User.findOneAndUpdate(
+            { _id: info.id },
+            { postcount: 0 },
+            { new: true }
+        );
+        res.json('ok');
+    });
 });
 
 app.get('/posts', async (req,res)=>{
