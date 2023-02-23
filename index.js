@@ -69,18 +69,21 @@ app.post('/login', async (req, res) => {
         const passOk = bcrypt.compareSync(password,userDoc.password);
         if (passOk){
             jwt.sign({email,id:userDoc._id,username:userDoc.username,profilePicture:userDoc.profilePicture},secret,{},(err,token)=>{
-                if (err) throw err;
-                res.cookie('token',token,{
-                    expires: 86400,
-                    httpOnly: false,
-                    secure: true,
-                    sameSite:'none'
-                }).json({
-                    id:userDoc._id,
-                    username:userDoc.username,
-                    profilePicture:userDoc.profilePicture,
-                    email,
-                });
+                try {
+                    res.cookie('token',token,{
+                        expires: 86400,
+                        httpOnly: false,
+                        secure: true,
+                        sameSite:'none'
+                    }).json({
+                        id:userDoc._id,
+                        username:userDoc.username,
+                        profilePicture:userDoc.profilePicture,
+                        email,
+                    });
+                } catch (err) {
+                    res.status(500).json('Server error');
+                }
             });
         } else{
             res.status(400).json('Wrong Password')
