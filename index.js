@@ -69,21 +69,18 @@ app.post('/login', async (req, res) => {
         const passOk = bcrypt.compareSync(password,userDoc.password);
         if (passOk){
             jwt.sign({email,id:userDoc._id,username:userDoc.username,profilePicture:userDoc.profilePicture},secret,{},(err,token)=>{
-                try {
-                    res.cookie('token',token,{
-                        expires: 86400,
-                        httpOnly: false,
-                        secure: true,
-                        sameSite:'none'
-                    }).json({
-                        id:userDoc._id,
-                        username:userDoc.username,
-                        profilePicture:userDoc.profilePicture,
-                        email,
-                    });
-                } catch (err) {
-                    res.status(500).json('Server error');
-                }
+                if (err) throw err;
+                res.cookie('token',token,{
+                    expires: 86400,
+                    httpOnly: false,
+                    secure: true,
+                    sameSite:'none'
+                }).json({
+                    id:userDoc._id,
+                    username:userDoc.username,
+                    profilePicture:userDoc.profilePicture,
+                    email,
+                });
             });
         } else{
             res.status(400).json('Wrong Password')
@@ -372,6 +369,11 @@ app.get('/user/:id', async (req, res) => {
       res.status(400).json({ error: 'Invalid id' });
     }
   });
+
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json('Internal Server Error');
+});
 
 app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
