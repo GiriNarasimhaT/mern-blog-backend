@@ -73,7 +73,6 @@ app.post('/login', async (req, res) => {
                     console.log(err);
                     throw err;
                 }
-                console.log(token);
                 res.cookie('token',token,{
                     expires: new Date(Date.now() + 5000),
                     httpOnly: false,
