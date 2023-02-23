@@ -74,6 +74,7 @@ app.post('/login', async (req, res) => {
                     throw err;
                 }
                 console.log(token);
+              
                 res.cookie('token',token,{
                     expires: 86400,
                     httpOnly: false,
