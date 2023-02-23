@@ -73,6 +73,7 @@ app.post('/login', async (req, res) => {
                     console.log(err);
                     throw err;
                 }
+                console.log(token);
                 res.cookie('token',token,{
                     expires: new Date(Date.now() + 5000),
                     httpOnly: false,
@@ -120,7 +121,10 @@ app.post('/logout', (req, res) => {
 
 // Post Creation
 app.post('/post', uploadMiddleware.single('file'), async (req, res) => {
-    const { token } = req.cookies;
+    const token = req.cookies.token;
+    if (!token) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
     jwt.verify(token, secret, {}, async (err, info) => {
       if (err) throw err;
       const { title, summary, content } = req.body;
@@ -147,7 +151,7 @@ app.post('/post', uploadMiddleware.single('file'), async (req, res) => {
       );
       res.json(postDoc);
     });
-  });
+  });  
 
 // Post Updation
 app.put('/post', uploadMiddleware.single('file'), async (req, res) => {
@@ -160,7 +164,10 @@ app.put('/post', uploadMiddleware.single('file'), async (req, res) => {
         fs.renameSync(path, newPath);
     }
     
-    const {token} = req.cookies;
+    const token = req.cookies.token;
+    if (!token) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
     jwt.verify(token,secret,{},async (err,info)=>{
         if (err) throw err;
         const {id,title,summary,content}=req.body;
@@ -200,7 +207,10 @@ app.put('/updateprofile', uploadMiddleware.single('file'), async (req, res) => {
         fs.renameSync(path, newPath);
     }
     
-    const {token} = req.cookies;
+    const token = req.cookies.token;
+    if (!token) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
     jwt.verify(token,secret,{},async (err,info)=>{
         if (err) throw err;
         const {id,email,username,postcount,bio}=req.body;
@@ -249,7 +259,10 @@ app.put('/updateprofile', uploadMiddleware.single('file'), async (req, res) => {
 });
 
 app.delete('/delete', uploadMiddleware.single('file'), async (req, res) => {
-    const {token} = req.cookies;
+    const token = req.cookies.token;
+    if (!token) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
     jwt.verify(token,secret,{},async (err,info)=>{
         if (err) throw err;
         const {id}=req.body;
@@ -280,7 +293,10 @@ app.delete('/delete', uploadMiddleware.single('file'), async (req, res) => {
 });
 
 app.delete('/deleteuser', uploadMiddleware.single('file'), async (req, res) => {
-    const {token} = req.cookies;
+    const token = req.cookies.token;
+    if (!token) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
     jwt.verify(token,secret,{},async (err,info)=>{
         if (err) throw err;
         const {id}=req.body;
@@ -307,7 +323,10 @@ app.delete('/deleteuser', uploadMiddleware.single('file'), async (req, res) => {
 });
 
 app.delete('/deleteposts', uploadMiddleware.single('file'), async (req, res) => {
-    const {token} = req.cookies;
+    const token = req.cookies.token;
+    if (!token) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
     jwt.verify(token,secret,{},async (err,info)=>{
         if (err) throw err;
         const {id}=req.body;
