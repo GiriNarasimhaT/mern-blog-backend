@@ -91,7 +91,8 @@ app.post('/login', async (req, res) => {
             res.status(400).json('No Account found with that email')
         }
     } catch (error) {
-        console.log(error)
+        res.status(500).json('Internal server error');
+        console.log(error);
     }
 });
 
@@ -110,7 +111,8 @@ app.get('/profile', (req,res)=>{
             }
         }
     } catch (error) {
-        console.log(error)
+        res.status(500).json('Internal server error');
+        console.log(error);
     }
 });
 
@@ -123,7 +125,8 @@ app.post('/logout', (req, res) => {
             sameSite: 'none'
           }).json('ok');
     } catch (error) {
-        console.log(error)
+        res.status(500).json('Internal server error');
+        console.log(error);
     }
   });  
 
@@ -158,8 +161,8 @@ app.post('/post', uploadMiddleware.single('file'), async (req, res) => {
         res.json(postDoc);
         });
     } catch (error) {
+        res.status(500).json('Internal server error');
         console.log(error);
-        res.status(500).json('Not Logged in')
     }
 });
 
@@ -204,6 +207,7 @@ app.put('/post', uploadMiddleware.single('file'), async (req, res) => {
             res.json(postDoc);
         });
     } catch (error) {
+        res.status(500).json('Internal server error');
         console.log(error);
     }
 });
@@ -266,7 +270,8 @@ app.put('/updateprofile', uploadMiddleware.single('file'), async (req, res) => {
             }).json('ok');
         });
     } catch (error) {
-        console.log(error)
+        res.status(500).json('Internal server error');
+        console.log(error);
     }
 });
 
@@ -301,7 +306,8 @@ app.delete('/delete', uploadMiddleware.single('file'), async (req, res) => {
             res.json(postDoc);
         });
     } catch (error) {
-        console.log(error)
+        res.status(500).json('Internal server error');
+        console.log(error);
     }
 });
 
@@ -332,7 +338,8 @@ app.delete('/deleteuser', uploadMiddleware.single('file'), async (req, res) => {
             }
         });
     } catch (error) {
-        console.log(error)
+        res.status(500).json('Internal server error');
+        console.log(error);
     }
 });
 
@@ -368,6 +375,7 @@ app.delete('/deleteposts', uploadMiddleware.single('file'), async (req, res) => 
             res.json('ok');
         });
     } catch (error) {
+        res.status(500).json('Internal server error');
         console.log(error);
     }
 });
