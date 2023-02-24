@@ -54,6 +54,11 @@ app.post('/register', async (req,res)=>{
             return res.status(400).json({"error": "Account with that email already exists"});
         }
 
+        const existingusername = await User.findOne({ username });
+        if (existingusername) {
+            return res.status(400).json({ message: "Username is taken, please try another" });
+        }
+
         const userDoc = await User.create({
             profilePicture:'',
             username,
@@ -70,7 +75,7 @@ app.post('/register', async (req,res)=>{
 
 app.post('/login', async (req, res) => {
     const {email,password}=req.body;
-    const userDoc = await User.findOne({email});
+    const userDoc = await User.findOne({ email: { $regex: new RegExp('^' + email + '$', 'i') } }); //case insensitive
     if(userDoc){
         const passOk = bcrypt.compareSync(password,userDoc.password);
         if (passOk){
