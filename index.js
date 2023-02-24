@@ -11,6 +11,7 @@ const multer = require('multer');
 const uploadMiddleware = multer({ dest: 'uploads/'})
 const fs = require('fs');
 require('dotenv').config();
+const path = require('path');
 
 const salt = bcrypt.genSaltSync(10);
 const secret = 'dh27rgfyu46f7twyufg46tf8y34rfg783';
@@ -130,11 +131,11 @@ app.post('/post', uploadMiddleware.single('file'), async (req, res) => {
       const { title, summary, content } = req.body;
       let newPath = '';
       if (req.file) {
-        const { originalname, path } = req.file;
+        const { originalname, path: filePath } = req.file;
         const parts = originalname.split('.');
         const ext = parts[parts.length - 1];
-        newPath = path + '.' + ext;
-        fs.renameSync(path, newPath);
+        newPath = filePath + '.' + ext;
+        fs.renameSync(filePath, newPath);
       }
       const postDoc = await Post.create({
         title,
@@ -156,12 +157,12 @@ app.post('/post', uploadMiddleware.single('file'), async (req, res) => {
 // Post Updation
 app.put('/post', uploadMiddleware.single('file'), async (req, res) => {
     let newPath = null;
-    if(req.file){
-        const {originalname,path}=req.file;
+    if (req.file) {
+        const { originalname, path: filePath } = req.file;
         const parts = originalname.split('.');
         const ext = parts[parts.length - 1];
-        newPath = path+'.'+ext;
-        fs.renameSync(path, newPath);
+        newPath = filePath + '.' + ext;
+        fs.renameSync(filePath, newPath);
     }
     
     const token = req.cookies.token;
@@ -200,12 +201,12 @@ app.put('/post', uploadMiddleware.single('file'), async (req, res) => {
 
 app.put('/updateprofile', uploadMiddleware.single('file'), async (req, res) => {
     let newPath = null;
-    if(req.file){
-        const {originalname,path}=req.file;
+    if (req.file) {
+        const { originalname, path: filePath } = req.file;
         const parts = originalname.split('.');
         const ext = parts[parts.length - 1];
-        newPath = path+'.'+ext;
-        fs.renameSync(path, newPath);
+        newPath = filePath + '.' + ext;
+        fs.renameSync(filePath, newPath);
     }
     
     const token = req.cookies.token;
