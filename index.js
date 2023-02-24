@@ -49,9 +49,9 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.post('/register', async (req,res)=>{
     const {username,email,password}=req.body;
     try{
-        const existingUser = await User.findOne({ email });
+        const existingUser = await User.findOne({ email: { $regex: new RegExp('^' + email + '$', 'i') } }); //case insensitive
         if (existingUser) {
-            return res.status(400).json({"error": "Email already exists"});
+            return res.status(400).json({"error": "Account with that email already exists"});
         }
 
         const userDoc = await User.create({
