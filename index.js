@@ -199,7 +199,8 @@ app.put('/post', uploadMiddleware.single('file'), async (req, res) => {
     });
 });
 
-app.put('/updateprofile', uploadMiddleware.single('file'), async (req, res) => {
+//Profile Updation
+app.put('/profile', uploadMiddleware.single('file'), async (req, res) => {
     let newPath = null;
     if (req.file) {
         const { originalname, path: filePath } = req.file;
@@ -244,10 +245,10 @@ app.put('/updateprofile', uploadMiddleware.single('file'), async (req, res) => {
         const userdata = await User.findById(userDoc._id).exec();
 
         const updatedUserData = {
-        email,
-        id: userdata._id,
-        username: userdata.username,
-        profilePicture: userdata.profilePicture,
+            email,
+            id: userdata._id,
+            username: userdata.username,
+            profilePicture: userdata.profilePicture,
         };
 
         const updatedToken = jwt.sign(updatedUserData, secret, {});
