@@ -56,7 +56,7 @@ app.post('/register', async (req,res)=>{
 
         const existingusername = await User.findOne({ username });
         if (existingusername) {
-            return res.status(400).json({ message: "Username is taken, please try another" });
+            return res.status(400).json({"error": "Username is taken, please try another" });
         }
 
         const userDoc = await User.create({
