@@ -180,10 +180,11 @@ app.put('/post', uploadMiddleware.single('file'), async (req, res) => {
             return res.status(400).json('Post updation failed');
         }
 
-        // delete old postcover
-        if (newPath && postDoc.cover){
-            fs.unlink(postDoc.cover, (err) => {
-                if (err) throw err;
+        // Delete old postcover
+        if (newPath && postDoc.cover) {
+            const oldFilePath = path.join(__dirname, postDoc.cover);
+            fs.unlink(oldFilePath, (err) => {
+            if (err) throw err;
             });
         }
 
@@ -223,10 +224,11 @@ app.put('/updateprofile', uploadMiddleware.single('file'), async (req, res) => {
             return res.status(400).json('You are not Logged in');
         }
 
-        //delete old profile picture
-        if (newPath && userDoc.profilePicture){
-            fs.unlink(userDoc.profilePicture, (err) => {
-                if (err) throw err;
+        // Delete old profile picture file
+        if (newPath && userDoc.profilePicture) {
+            const oldFilePath = path.join(__dirname, userDoc.profilePicture);
+            fs.unlink(oldFilePath, (err) => {
+            if (err) throw err;
             });
         }
 
@@ -272,11 +274,12 @@ app.delete('/delete', uploadMiddleware.single('file'), async (req, res) => {
             return res.status(400).json('You are not the author');
         }
 
-        //delete postcover
-        if (postDoc.cover){
-            fs.unlink(postDoc.cover, (err) => {
-                if (err) throw err;
-              });
+        // Delete postcover
+        if (postDoc.cover) {
+            const filePath = path.join(__dirname, postDoc.cover);
+            fs.unlink(filePath, (err) => {
+            if (err) throw err;
+            });
         }
 
         await postDoc.deleteOne();
@@ -313,10 +316,12 @@ app.delete('/deleteuser', uploadMiddleware.single('file'), async (req, res) => {
                 sameSite:'none'
             }).json('ok')
         );
-        //delete profile picture
-        if (userDoc.profilePicture){
-            fs.unlink(userDoc.profilePicture, (err) => {
-                if (err) throw err;
+
+        // Delete profile picture
+        if (userDoc.profilePicture) {
+            const filePath = path.join(__dirname, userDoc.profilePicture);
+            fs.unlink(filePath, (err) => {
+            if (err) throw err;
             });
         }
     });
@@ -339,9 +344,10 @@ app.delete('/deleteposts', uploadMiddleware.single('file'), async (req, res) => 
         //Delete all postcovers
         const posts = await Post.find({ author: id });
         for (const post of posts) {
-            if (post.cover){
-                fs.unlink(post.cover, (err) => {
-                    if (err) throw err;
+            if (post.cover) {
+                const filePath = path.join(__dirname, post.cover);
+                fs.unlink(filePath, (err) => {
+                if (err) throw err;
                 });
             }
         }
