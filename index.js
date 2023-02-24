@@ -21,7 +21,7 @@ const PORT = process.env.PORT || 4000;
 const DB = process.env.DATABASE;
 
 mongoose.connect(DB).then(() => {
-  console.log('Connected to MongoDB');
+  console.log('Connected to Database');
 }).catch((error) => {
   console.error('Error connecting to MongoDB', error);
 });
@@ -84,7 +84,6 @@ app.post('/login', async (req, res) => {
                     console.log(err);
                     throw err;
                 }
-                console.log(token);
                 res.cookie('token',token,{
                     expires: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
                     httpOnly: false,
@@ -222,14 +221,14 @@ app.put('/profile', uploadMiddleware.single('file'), async (req, res) => {
     
     const token = req.cookies.token;
     if (!token) {
-      return res.status(401).json({ message: 'Unauthorized' });
+        return res.status(401).json({ message: 'Unauthorized' });
     }
-    jwt.verify(token,secret,{},async (err,info)=>{
-        if (err) throw err;
+    try {
+        const info = jwt.verify(token, secret);
         const {id,email,username,postcount,bio}=req.body;
         const userDoc = await User.findById(id);
         if (!userDoc) {
-            return res.status(404).json("Page not found");
+            return res.status(404).json("User not found");
         }
         const user = JSON.stringify(userDoc._id)===JSON.stringify(info.id);
         if (!user){
@@ -239,29 +238,29 @@ app.put('/profile', uploadMiddleware.single('file'), async (req, res) => {
         // Delete old profile picture file
         if (newPath && userDoc.profilePicture) {
             const oldFilePath = path.join(__dirname, userDoc.profilePicture);
-            fs.unlink(oldFilePath, (err) => {
-            if (err) throw err;
-            });
+            try {
+                await fs.promises.unlink(oldFilePath);
+            } catch (err) {
+                console.error(err);
+            }
         }
-
-        await userDoc.updateOne({
-            email,
-            username,
-            profilePicture: newPath ? newPath : userDoc.profilePicture,
-            postcount,
-            bio,
-        });
-        
-        const userdata = await User.findById(userDoc._id).exec();
 
         const updatedUserData = {
             email,
-            id: userdata._id,
-            username: userdata.username,
-            profilePicture: userdata.profilePicture,
+            username:username,
+            profilePicture: newPath ? newPath : userDoc.profilePicture,
+            postcount,
+            bio,
         };
 
-        const updatedToken = jwt.sign(updatedUserData, secret, {});
+        await userDoc.updateOne(updatedUserData);
+        
+        const updatedToken = jwt.sign({
+            email,
+            id,
+            username: username,
+            profilePicture: newPath ? newPath : updatedUserData.profilePicture,
+        }, secret, {});
 
         res.cookie('token', updatedToken,{
             expires: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
@@ -269,12 +268,15 @@ app.put('/profile', uploadMiddleware.single('file'), async (req, res) => {
             secure: true,
             sameSite:'none'
         }).json({
-            id:userDoc._id,
-            username:userDoc.username,
-            profilePicture:userDoc.profilePicture,
+            id,
             email,
+            username:username,
+            profilePicture:newPath ? newPath : userDoc.profilePicture,
         });
-    });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
 });
 
 app.delete('/delete', uploadMiddleware.single('file'), async (req, res) => {
