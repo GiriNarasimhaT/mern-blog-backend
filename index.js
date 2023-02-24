@@ -118,7 +118,7 @@ app.post('/logout', (req, res) => {
       secure: true,
       sameSite: 'none'
     }).json('ok');
-  });  
+  });
 
 // Post Creation
 app.post('/post', uploadMiddleware.single('file'), async (req, res) => {
@@ -257,7 +257,12 @@ app.put('/updateprofile', uploadMiddleware.single('file'), async (req, res) => {
             httpOnly: false,
             secure: true,
             sameSite:'none'
-        }).json('ok');
+        }).json({
+            id:userDoc._id,
+            username:userDoc.username,
+            profilePicture:userDoc.profilePicture,
+            email,
+        });
     });
 });
 
