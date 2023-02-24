@@ -250,7 +250,7 @@ app.put('/updateprofile', uploadMiddleware.single('file'), async (req, res) => {
         const updatedToken = jwt.sign(updatedUserData, secret, {});
 
         res.cookie('token', updatedToken,{
-            expires: new Date(Date.now() + 5000),
+            expires: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
             httpOnly: false,
             secure: true,
             sameSite:'none'
