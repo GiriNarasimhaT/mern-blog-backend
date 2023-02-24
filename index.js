@@ -49,6 +49,11 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.post('/register', async (req,res)=>{
     const {username,email,password}=req.body;
     try{
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json("Account with that email already exists");
+        }
+
         const userDoc = await User.create({
             profilePicture:'',
             username,
@@ -57,7 +62,7 @@ app.post('/register', async (req,res)=>{
             postcount:0,
             bio:'',
         });
-        res.json('ok');
+        res.status(200).json('Registered Successfully');
     } catch(e){
         res.status(400).json(e);
     }
