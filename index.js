@@ -44,7 +44,7 @@ app.use(cors(corsOptions))
 
 app.use(express.json());
 app.use(cookieParser());
-app.use('/uploads',express.static(__dirname+'/uploads'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.post('/register', async (req,res)=>{
     const {username,email,password}=req.body;
@@ -106,7 +106,7 @@ app.get('/profile', (req,res)=>{
             });
         }
         else{
-            res.json('')
+            res.json('');
         }
     }
 });
