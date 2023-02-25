@@ -279,6 +279,7 @@ app.put('/profile', uploadMiddleware.single('file'), async (req, res) => {
     }
 });
 
+//Delete Post
 app.delete('/delete', uploadMiddleware.single('file'), async (req, res) => {
     const token = req.cookies.token;
     if (!token) {
@@ -314,6 +315,7 @@ app.delete('/delete', uploadMiddleware.single('file'), async (req, res) => {
     });
 });
 
+// Delete User
 app.delete('/deleteuser', uploadMiddleware.single('file'), async (req, res) => {
     const token = req.cookies.token;
     if (!token) {
@@ -346,6 +348,7 @@ app.delete('/deleteuser', uploadMiddleware.single('file'), async (req, res) => {
     });
 });
 
+// Delete all posts
 app.delete('/deleteposts', uploadMiddleware.single('file'), async (req, res) => {
     const token = req.cookies.token;
     if (!token) {
