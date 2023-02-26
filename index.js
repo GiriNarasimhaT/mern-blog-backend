@@ -189,6 +189,13 @@ app.put('/post', uploadMiddleware.single('file'), async (req, res) => {
         if (!user){
             return res.status(400).json('Post updation failed');
         }
+        
+        await postDoc.updateOne({
+            title,
+            summary,
+            content,
+            cover: newPath ? newPath : postDoc.cover,
+        });
 
         // Delete old postcover
         if (newPath && postDoc.cover) {
@@ -197,13 +204,6 @@ app.put('/post', uploadMiddleware.single('file'), async (req, res) => {
             if (err) throw err;
             });
         }
-
-        await postDoc.updateOne({
-            title,
-            summary,
-            content,
-            cover: newPath ? newPath : postDoc.cover,
-        });
         res.json(postDoc);
     });
 });
@@ -293,15 +293,7 @@ app.delete('/delete', uploadMiddleware.single('file'), async (req, res) => {
         if (!isAuthor){
             return res.status(400).json('You are not the author');
         }
-
-        // Delete postcover
-        if (postDoc.cover) {
-            const filePath = path.join(__dirname, postDoc.cover);
-            fs.unlink(filePath, (err) => {
-            if (err) throw err;
-            });
-        }
-
+        
         await postDoc.deleteOne();
 
         // decrementing postcount
@@ -311,6 +303,13 @@ app.delete('/delete', uploadMiddleware.single('file'), async (req, res) => {
             { new: true }
         );
 
+        // Delete postcover
+        if (postDoc.cover) {
+            const filePath = path.join(__dirname, postDoc.cover);
+            fs.unlink(filePath, (err) => {
+            if (err) throw err;
+            });
+        }
         res.json(postDoc);
     });
 });
@@ -363,6 +362,14 @@ app.delete('/deleteposts', uploadMiddleware.single('file'), async (req, res) => 
             return res.status(400).json('You have not Singed In');
         }
 
+        await Post.deleteMany({author:id});
+        // set postcount to 0
+        await User.findOneAndUpdate(
+            { _id: info.id },
+            { postcount: 0 },
+            { new: true }
+        );
+
         //Delete all postcovers
         const posts = await Post.find({ author: id });
         for (const post of posts) {
@@ -373,14 +380,6 @@ app.delete('/deleteposts', uploadMiddleware.single('file'), async (req, res) => 
                 });
             }
         }
-
-        await Post.deleteMany({author:id});
-        // set postcount to 0
-        await User.findOneAndUpdate(
-            { _id: info.id },
-            { postcount: 0 },
-            { new: true }
-        );
         res.json('ok');
     });
 });
