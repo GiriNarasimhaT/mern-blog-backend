@@ -8,7 +8,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const multer = require('multer');
-const uploadMiddleware = multer({ dest: 'uploads/'})
+const uploadMiddleware = multer({ dest: 'uploads/'});
 const fs = require('fs');
 require('dotenv').config();
 const path = require('path');
@@ -200,9 +200,11 @@ app.put('/post', uploadMiddleware.single('file'), async (req, res) => {
         // Delete old postcover
         if (newPath && postDoc.cover) {
             const oldFilePath = path.join(__dirname, postDoc.cover);
-            fs.unlink(oldFilePath, (err) => {
-            if (err) throw err;
-            });
+            try {
+                await fs.promises.unlink(oldFilePath);
+            } catch (err) {
+                console.error(err);
+            }
         }
         res.json(postDoc);
     });
@@ -235,7 +237,7 @@ app.put('/profile', uploadMiddleware.single('file'), async (req, res) => {
             return res.status(400).json('You are not Logged in');
         }
 
-        // Delete old profile picture file
+        // Delete old picture file
         if (newPath && userDoc.profilePicture) {
             const oldFilePath = path.join(__dirname, userDoc.profilePicture);
             try {
@@ -306,9 +308,11 @@ app.delete('/delete', uploadMiddleware.single('file'), async (req, res) => {
         // Delete postcover
         if (postDoc.cover) {
             const filePath = path.join(__dirname, postDoc.cover);
-            fs.unlink(filePath, (err) => {
-            if (err) throw err;
-            });
+            try {
+                await fs.promises.unlink(filePath);
+            } catch (err) {
+                console.error(err);
+            }
         }
         res.json(postDoc);
     });
@@ -340,9 +344,11 @@ app.delete('/deleteuser', uploadMiddleware.single('file'), async (req, res) => {
         // Delete profile picture
         if (userDoc.profilePicture) {
             const filePath = path.join(__dirname, userDoc.profilePicture);
-            fs.unlink(filePath, (err) => {
-            if (err) throw err;
-            });
+            try {
+                await fs.promises.unlink(filePath);
+            } catch (err) {
+                console.error(err);
+            }
         }
     });
 });
@@ -375,9 +381,11 @@ app.delete('/deleteposts', uploadMiddleware.single('file'), async (req, res) => 
         for (const post of posts) {
             if (post.cover) {
                 const filePath = path.join(__dirname, post.cover);
-                fs.unlink(filePath, (err) => {
-                if (err) throw err;
-                });
+                try {
+                    await fs.promises.unlink(filePath);
+                } catch (err) {
+                    console.error(err);
+                }
             }
         }
         res.json('ok');
