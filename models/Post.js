@@ -6,7 +6,10 @@ const PostSchema = new Schema({
     summary:String,
     content:String,
     cover:String,
-    author:{type:Schema.Types.ObjectId, ref:'User'}
+    author:{type:Schema.Types.ObjectId, ref:'User'},
+    viewcount: { type: Number, default: 0, integer: true },
+    likecount: { type: Number, default: 0, integer: true },
+    comments: [{text:String, created:{type: Date, default:Date.now}}]
 },{
     timestamps:true,
 });
